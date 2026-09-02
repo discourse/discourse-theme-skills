@@ -4,8 +4,8 @@ import { service } from "@ember/service";
 import { htmlSafe } from "@ember/template";
 import { block } from "discourse/blocks";
 import CategoryTitleLink from "discourse/components/category-title-link";
-import replaceEmoji from "discourse/helpers/replace-emoji";
 import Category from "discourse/models/category";
+import dReplaceEmoji from "discourse/ui-kit/helpers/d-replace-emoji";
 
 @block("theme:skills:category-topics", {
   description: "Recent topics from a specific category",
@@ -53,7 +53,7 @@ export default class BlockCategoryTopics extends Component {
         <div class="block-category-topics__list">
           {{#each this.topics as |topic|}}
             <a href={{topic.url}} class="block-category-topics__topic">
-              {{htmlSafe (replaceEmoji topic.fancy_title)}}
+              {{htmlSafe (dReplaceEmoji topic.fancy_title)}}
               <span class="block-category-topics__post-count">
                 ({{topic.posts_count}})
               </span>

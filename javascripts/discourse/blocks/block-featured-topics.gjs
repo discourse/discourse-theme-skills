@@ -1,10 +1,10 @@
 import Component from "@glimmer/component";
 import { service } from "@ember/service";
 import { block } from "discourse/blocks";
-import AsyncContent from "discourse/components/async-content";
-import avatar from "discourse/helpers/avatar";
-import categoryLink from "discourse/helpers/category-link";
 import { bind } from "discourse/lib/decorators";
+import DAsyncContent from "discourse/ui-kit/d-async-content";
+import dAvatar from "discourse/ui-kit/helpers/d-avatar";
+import dCategoryLink from "discourse/ui-kit/helpers/d-category-link";
 import { i18n } from "discourse-i18n";
 
 @block("theme:skills:featured-topics", {
@@ -35,7 +35,7 @@ export default class BlockFeaturedTopics extends Component {
   }
 
   <template>
-    <AsyncContent @asyncData={{this.fetchTopics}}>
+    <DAsyncContent @asyncData={{this.fetchTopics}}>
       <:loading>
         <div class="block-featured-topics__loading">
           <div class="spinner" />
@@ -78,16 +78,16 @@ export default class BlockFeaturedTopics extends Component {
                 </div>
                 <div class="block-featured-topics__card-meta">
                   <div class="block-featured-topics__card-author">
-                    {{avatar topic.creator imageSize="tiny"}}
+                    {{dAvatar topic.creator imageSize="tiny"}}
                     <span>{{topic.creator.username}}</span>
                   </div>
-                  {{categoryLink topic.category}}
+                  {{dCategoryLink topic.category}}
                 </div>
               </a>
             {{/each}}
           </div>
         </div>
       </:content>
-    </AsyncContent>
+    </DAsyncContent>
   </template>
 }

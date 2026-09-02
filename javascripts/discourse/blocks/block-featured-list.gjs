@@ -1,10 +1,10 @@
 import Component from "@glimmer/component";
 import { service } from "@ember/service";
 import { block } from "discourse/blocks";
-import AsyncContent from "discourse/components/async-content";
 import BasicTopicList from "discourse/components/basic-topic-list";
-import DButton from "discourse/components/d-button";
 import { bind } from "discourse/lib/decorators";
+import DAsyncContent from "discourse/ui-kit/d-async-content";
+import DButton from "discourse/ui-kit/d-button";
 import { i18n } from "discourse-i18n";
 
 @block("theme:skills:featured-list", {
@@ -33,7 +33,7 @@ export default class BlockFeaturedList extends Component {
   }
 
   <template>
-    <AsyncContent @asyncData={{this.fetchTopics}}>
+    <DAsyncContent @asyncData={{this.fetchTopics}}>
       <:loading>
         <div class="block-featured-list__loading"><div class="spinner" /></div>
       </:loading>
@@ -65,6 +65,6 @@ export default class BlockFeaturedList extends Component {
           </div>
         </div>
       </:content>
-    </AsyncContent>
+    </DAsyncContent>
   </template>
 }

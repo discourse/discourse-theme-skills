@@ -1,11 +1,11 @@
 import Component from "@glimmer/component";
 import { block } from "discourse/blocks";
-import AsyncContent from "discourse/components/async-content";
-import DButton from "discourse/components/d-button";
 import { ajax } from "discourse/lib/ajax";
 import { bind } from "discourse/lib/decorators";
 import { longDate, shortDateNoYear } from "discourse/lib/formatter";
 import { or } from "discourse/truth-helpers";
+import DAsyncContent from "discourse/ui-kit/d-async-content";
+import DButton from "discourse/ui-kit/d-button";
 import { i18n } from "discourse-i18n";
 
 @block("theme:skills:upcoming-events", {
@@ -38,7 +38,7 @@ export default class BlockUpcomingEvents extends Component {
   }
 
   <template>
-    <AsyncContent @asyncData={{this.fetchEvents}}>
+    <DAsyncContent @asyncData={{this.fetchEvents}}>
       <:loading>
         <div class="block-upcoming-events__loading">
           <div class="spinner" />
@@ -89,6 +89,6 @@ export default class BlockUpcomingEvents extends Component {
           {{/if}}
         </div>
       </:content>
-    </AsyncContent>
+    </DAsyncContent>
   </template>
 }
