@@ -191,6 +191,8 @@ export default class BlockLeaderboard extends Component {
 
 Import block classes and pass them to `api.renderBlocks()` in an `apiInitializer`. Always use `apiInitializer` (not `apiPreInitializer`) for `renderBlocks` calls.
 
+**Initializers are layout files.** They exist to make the layout readable: one `api.renderBlocks()` call with a declarative list of entries — `block`, `id`, `args`, `conditions`, `children` — and nothing else. No helper functions, no intermediate constants, no conditional spreads, no data mapping, no comments. Args carry only display-string i18n keys and layout variants; functional configuration (counts, tags, categories, URLs) lives in theme settings that the block reads itself (see Theme Settings below).
+
 ```javascript
 import BlockGroup from "discourse/blocks/builtin/block-group";
 import { apiInitializer } from "discourse/lib/api";
@@ -204,21 +206,20 @@ export default apiInitializer((api) => {
       block: BlockFeaturedList,
       id: "featured-list",
       args: {
-        title: "Latest topics",
-        count: 14,
-        buttonLabel: "See all topics",
-        buttonLink: "/latest",
+        title: "homepage.featured_list.title",
+        linkText: "homepage.featured_list.link_text",
+        linkUrl: "/latest",
       },
     },
     {
       block: BlockGroup,
       id: "main-right",
       children: [
-        { block: BlockPromo, args: { title: "Ideas" } },
+        { block: BlockPromo, args: { title: "homepage.promo.title" } },
         {
           block: BlockLeaderboard,
           id: "homepage-leaderboard",
-          args: { count: 10 },
+          args: { title: "homepage.leaderboard.title" },
         },
       ],
     },
@@ -334,12 +335,11 @@ en:
   args: {
     sectionTitle: "homepage.banner.title",
     linkText: "homepage.banner.link_text",
-    linkUrl: settings.banner[0]?.link_url,  // functional config from settings
   },
 }
 ```
 
-**Key rule:** Display strings (titles, labels) are hardcoded i18n keys in the initializer and resolved via `themePrefix` in the template. Functional values (URLs, counts, tags, filters) come from object settings. Do NOT put display strings in the settings schema.
+**Key rule:** Display strings (titles, labels) are hardcoded i18n keys in the initializer and resolved via `themePrefix` in the template. Functional values (URLs, counts, tags, filters) come from theme settings that the block reads itself. Do NOT put display strings in the settings schema, and do NOT read or map settings in the initializer.
 
 Strings hardcoded directly in the template (not passed as args) also use `themePrefix`:
 
@@ -349,13 +349,24 @@ Strings hardcoded directly in the template (not passed as args) also use `themeP
 
 ### Theme Settings
 
-Theme settings are available via the global `settings` object:
+Theme settings are available via the global `settings` object. Blocks read their own settings internally — give each block one `objects`-type setting named after it (a structured per-block editor in admin) and expose it via a `config` getter:
 
 ```javascript
-args: {
-  image: settings.hero_image;
+export default class BlockLeaderboard extends Component {
+  get config() {
+    return settings.leaderboard[0] ?? {};
+  }
+
+  @bind
+  async fetchData() {
+    return await ajax("/leaderboard", {
+      data: { user_limit: this.config.count ?? 8 },
+    });
+  }
 }
 ```
+
+A block that needs configuration to work (a tag, a category) renders nothing when unconfigured — guard the template — so its layout entry stays unconditional. The one settings read allowed in an initializer is inside a `conditions` object, where a settings entry can serve as the condition source (see Setting Condition).
 
 ## Conditions
 
@@ -507,6 +518,11 @@ Match by site setting or theme setting values. Supports multiple check types:
 
 // Theme setting (pass settings object as source)
 { type: "setting", source: settings, name: "show_sidebar", enabled: true }
+
+// `source` accepts ANY object — e.g. one entry of an objects-type setting,
+// letting conditions match nested per-block configuration
+const badges = settings.badges_ticker[0] ?? {};
+{ type: "setting", source: badges, name: "placement", equals: "sidebar" }
 ```
 
 ### Viewport Condition
@@ -644,6 +660,8 @@ module("My block tests", function (hooks) {
 | Using `sizes` in viewport condition                | Use `min`/`max` breakpoints: `{ type: "viewport", min: "lg" }`                                                                                         |
 | Using `oneOf` in an args schema                    | Use `enum` (string/number args) or `itemEnum` (array items) — `oneOf` is not a valid schema property                                                   |
 | Two themes/components rendering into the same outlet | An outlet accepts exactly ONE layout globally, not one per theme ("already has a layout registered"). Consolidate into one theme, or uninstall the other |
+| Gating an entry with a missing required arg via conditions | Required args are validated at `renderBlocks()` time, BEFORE conditions are evaluated — make the arg optional and let the block render nothing when unconfigured |
+| Logic in an initializer (helpers, consts, spreads, comments) | Initializers are layout files: entries and conditions only. Move settings reads and data mapping into the block (a `config` getter over its objects setting) |
 | Importing UI components from legacy paths           | Prefer `discourse/ui-kit/*` (e.g. `discourse/ui-kit/d-button`, `d-async-content`, `d-user-link`, `helpers/d-avatar`, `helpers/d-icon`, `helpers/d-number`) — the old `discourse/components/*` and `discourse/helpers/*` paths are compatibility shims (see core `ui-kit-shims.js` for the full map) |
 | Using `trust_level` in user condition              | Use `minTrustLevel`/`maxTrustLevel` (camelCase, separate min/max)                                                                                      |
 | Using `enabled` alone in setting condition         | Always include `name`: `{ type: "setting", name: "...", enabled: true }`                                                                               |
