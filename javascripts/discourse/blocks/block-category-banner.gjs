@@ -12,15 +12,28 @@ import { i18n } from "discourse-i18n";
 @block("theme:skills:category-banner", {
   description:
     "Dynamic banner for category pages showing name, logo, and description",
-  args: {
-    showDescription: { type: "boolean", default: true },
-    showLogo: { type: "boolean", default: true },
-  },
 })
 export default class BlockCategoryBanner extends Component {
   @service router;
 
   @tracked category = null;
+
+  get config() {
+    return settings.category_banner[0] ?? {};
+  }
+
+  get showLogo() {
+    return this.config.show_logo ?? true;
+  }
+
+  get showDescription() {
+    return this.config.show_description ?? true;
+  }
+
+  get visibleForCategory() {
+    const categories = this.config.categories;
+    return !categories?.length || categories.includes(this.category?.id);
+  }
 
   get categorySlugPathWithID() {
     return this.router?.currentRoute?.params?.category_slug_path_with_id;
@@ -40,8 +53,8 @@ export default class BlockCategoryBanner extends Component {
 
   <template>
     <div class="block-category-banner__layout" {{didInsert this.getCategory}}>
-      {{#if this.category}}
-        {{#if (and @showLogo this.category.uploaded_logo)}}
+      {{#if (and this.category this.visibleForCategory)}}
+        {{#if (and this.showLogo this.category.uploaded_logo)}}
           <div class="block-category-banner__logo">
             <CategoryLogo @category={{this.category}} />
           </div>
@@ -50,7 +63,7 @@ export default class BlockCategoryBanner extends Component {
           <h1 class="block-category-banner__name">
             {{this.category.name}}
           </h1>
-          {{#if @showDescription}}
+          {{#if this.showDescription}}
             <p class="block-category-banner__description">
               {{if
                 this.category.description_text

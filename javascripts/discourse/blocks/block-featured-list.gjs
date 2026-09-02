@@ -13,8 +13,6 @@ import { i18n } from "discourse-i18n";
     title: { type: "string" },
     linkText: { type: "string" },
     linkUrl: { type: "string" },
-    count: { type: "number", default: 10 },
-    filter: { type: "string", default: "latest" },
   },
 })
 export default class BlockFeaturedList extends Component {
@@ -22,8 +20,9 @@ export default class BlockFeaturedList extends Component {
 
   @bind
   async fetchTopics() {
-    const filter = this.args.filter || "latest";
-    const count = this.args.count || 10;
+    const config = settings.featured_list[0] ?? {};
+    const filter = config.filter ?? "latest";
+    const count = config.count ?? 10;
 
     const topicList = await this.store.findFiltered("topicList", { filter });
     if (!topicList.topics?.length) {

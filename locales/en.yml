@@ -2,20 +2,89 @@ en:
   theme_metadata:
     description: "Example Discourse theme with blocks — skills reference implementation"
     settings:
-      featured_topics_tag: "Tag used to filter featured topics"
-      featured_topics_count: "Number of featured topics to display"
-      featured_list_count: "Number of topics in the featured list"
-      featured_list_filter: "Filter for the featured list (latest, top, new, hot)"
-      leaderboard_count: "Number of users shown on the leaderboard"
-      events_count: "Number of upcoming events to show"
-      sidebar_category_id: "Category ID for sidebar topic list"
-      sidebar_tags_count: "Number of tags shown in sidebar"
-      banner_categories: "Categories that display a banner"
-      cta_link: "URL for the call-to-action button"
-      badges_ticker_location: "Where the recently earned badges block renders on the homepage"
-      badges_ticker_count: "Maximum number of members in the badges block"
-      badges_ticker_badge_ids: "Only feature these badge IDs (empty = all enabled badges)"
-      badges_ticker_tiers: "Only feature badges of these tiers (empty = all tiers)"
+      hero_banner:
+        description: "Hero banner on the homepage"
+        schema:
+          properties:
+            button_link:
+              label: "Button link"
+      featured_topics:
+        description: "Featured topics card grid on the homepage"
+        schema:
+          properties:
+            tag:
+              label: "Tag"
+              description: "Topics with this tag are featured (empty disables the block)"
+            count:
+              label: "Count"
+      featured_list:
+        description: "Topic list on the homepage"
+        schema:
+          properties:
+            count:
+              label: "Count"
+            filter:
+              label: "Filter"
+      leaderboard:
+        description: "Gamification leaderboard on the homepage"
+        schema:
+          properties:
+            count:
+              label: "Count"
+      upcoming_events:
+        description: "Upcoming events on the homepage"
+        schema:
+          properties:
+            count:
+              label: "Count"
+      badges_ticker:
+        description: "Recently earned badges on the homepage"
+        schema:
+          properties:
+            placement:
+              label: "Placement"
+            count:
+              label: "Count"
+            badge_ids:
+              label: "Badge IDs"
+              description: "Only feature these badge IDs, comma-separated (empty = all enabled badges)"
+            gold:
+              label: "Gold badges"
+            silver:
+              label: "Silver badges"
+            bronze:
+              label: "Bronze badges"
+      cta_banner:
+        description: "Call-to-action banner on the homepage"
+        schema:
+          properties:
+            link:
+              label: "Button link"
+      category_banner:
+        description: "Banner on category pages"
+        schema:
+          properties:
+            categories:
+              label: "Categories"
+              description: "Only show the banner for these categories (empty = all)"
+            show_description:
+              label: "Show description"
+            show_logo:
+              label: "Show logo"
+      category_topics:
+        description: "Category topics in the discovery sidebar"
+        schema:
+          properties:
+            category:
+              label: "Category"
+            count:
+              label: "Count"
+      top_tags:
+        description: "Popular tags in the discovery sidebar"
+        schema:
+          properties:
+            count:
+              label: "Count"
   hero:
     title: "Build something great together"
     subtitle: "A community for makers, thinkers, and doers. Ask questions, share ideas, and level up."

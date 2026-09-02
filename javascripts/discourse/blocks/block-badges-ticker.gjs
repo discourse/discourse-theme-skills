@@ -44,9 +44,6 @@ const TickerEntry = <template>
   args: {
     title: { type: "string" },
     buttonLabel: { type: "string" },
-    badgeIds: { type: "array", itemType: "number" },
-    tiers: { type: "array", itemEnum: ["gold", "silver", "bronze"] },
-    count: { type: "number", default: 6 },
     variant: {
       type: "string",
       enum: ["auto", "rows", "ticker"],
@@ -56,6 +53,10 @@ const TickerEntry = <template>
 })
 export default class BlockBadgesTicker extends Component {
   viewportEl = null;
+
+  get config() {
+    return settings.badges_ticker[0] ?? {};
+  }
 
   get variantClass() {
     return `--${this.args.variant ?? "auto"}`;
@@ -84,13 +85,18 @@ export default class BlockBadgesTicker extends Component {
   }
 
   async resolveBadgeIds() {
-    if (this.args.badgeIds?.length) {
-      return this.args.badgeIds.map(Number);
+    const configuredIds = String(this.config.badge_ids ?? "")
+      .split(/[|,]/)
+      .map(Number)
+      .filter(Boolean);
+
+    if (configuredIds.length) {
+      return configuredIds;
     }
 
-    const tierIds = (this.args.tiers ?? [])
-      .map((tier) => TIER_IDS[tier])
-      .filter(Boolean);
+    const tierIds = Object.keys(TIER_IDS)
+      .filter((tier) => this.config[tier])
+      .map((tier) => TIER_IDS[tier]);
 
     const { badges } = await ajax("/badges.json").catch(() => ({ badges: [] }));
 
@@ -127,7 +133,7 @@ export default class BlockBadgesTicker extends Component {
         seen.add(userBadge.user.id);
         return true;
       })
-      .slice(0, this.args.count);
+      .slice(0, this.config.count ?? 6);
 
     entries.forEach((userBadge) => {
       userBadge.earnedAgo = relativeAge(new Date(userBadge.grantedAt), {

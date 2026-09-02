@@ -10,7 +10,6 @@ import { i18n } from "discourse-i18n";
   description: "Popular tags list",
   args: {
     title: { type: "string" },
-    count: { type: "number", default: 10 },
   },
 })
 export default class BlockTopTags extends Component {
@@ -23,7 +22,7 @@ export default class BlockTopTags extends Component {
 
   @action
   async getTags() {
-    const count = this.args.count || 10;
+    const count = settings.top_tags[0]?.count ?? 10;
     const tagsList = await ajax("/tags.json");
     this.topTags = tagsList.tags.slice(0, count);
   }

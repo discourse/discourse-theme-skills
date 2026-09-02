@@ -9,10 +9,6 @@ import dReplaceEmoji from "discourse/ui-kit/helpers/d-replace-emoji";
 
 @block("theme:skills:category-topics", {
   description: "Recent topics from a specific category",
-  args: {
-    categoryId: { type: "number", required: true },
-    count: { type: "number", default: 10 },
-  },
 })
 export default class BlockCategoryTopics extends Component {
   @service store;
@@ -22,8 +18,9 @@ export default class BlockCategoryTopics extends Component {
 
   constructor() {
     super(...arguments);
-    const count = this.args.count || 10;
-    const categoryId = this.args.categoryId;
+    const config = settings.category_topics[0] ?? {};
+    const count = config.count ?? 10;
+    const categoryId = config.category?.[0];
 
     if (!categoryId) {
       return;

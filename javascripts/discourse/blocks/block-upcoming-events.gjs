@@ -12,7 +12,6 @@ import { i18n } from "discourse-i18n";
   description: "Upcoming events from discourse-post-event plugin",
   args: {
     title: { type: "string" },
-    count: { type: "number", default: 5 },
     buttonLabel: { type: "string", required: true },
     linkLabel: { type: "string" },
     linkUrl: { type: "string" },
@@ -21,7 +20,7 @@ import { i18n } from "discourse-i18n";
 export default class BlockUpcomingEvents extends Component {
   @bind
   async fetchEvents() {
-    const count = this.args.count || 5;
+    const count = settings.upcoming_events[0]?.count ?? 5;
     const results = await ajax("discourse-post-event/events");
     if (!results.events?.length) {
       return null;

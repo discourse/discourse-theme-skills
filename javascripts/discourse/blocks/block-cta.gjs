@@ -9,10 +9,13 @@ import { i18n } from "discourse-i18n";
     title: { type: "string", required: true },
     description: { type: "string" },
     buttonLabel: { type: "string" },
-    buttonLink: { type: "string" },
   },
 })
 export default class BlockCta extends Component {
+  get buttonLink() {
+    return settings.cta_banner[0]?.link;
+  }
+
   <template>
     <div class="block-cta__layout">
       <h2 class="block-cta__title">
@@ -23,10 +26,10 @@ export default class BlockCta extends Component {
           {{i18n (themePrefix @description)}}
         </p>
       {{/if}}
-      {{#if @buttonLink}}
+      {{#if this.buttonLink}}
         <DButton
           class="btn-primary block-cta__button"
-          @href={{@buttonLink}}
+          @href={{this.buttonLink}}
           @translatedLabel={{i18n (themePrefix @buttonLabel)}}
         />
       {{/if}}

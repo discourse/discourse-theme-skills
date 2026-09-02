@@ -14,7 +14,6 @@ import { i18n } from "discourse-i18n";
   description: "Gamification leaderboard showing top users",
   args: {
     title: { type: "string" },
-    count: { type: "number", default: 8 },
     buttonLabel: { type: "string", required: true },
   },
 })
@@ -23,7 +22,7 @@ export default class BlockLeaderboard extends Component {
 
   @bind
   async fetchLeaderboard() {
-    const count = this.args.count || 8;
+    const count = settings.leaderboard[0]?.count ?? 8;
     const data = await ajax("/leaderboard", { data: { user_limit: count } });
 
     const users = (data.users || []).map((user, index) => ({

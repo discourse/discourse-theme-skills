@@ -9,10 +9,13 @@ import { i18n } from "discourse-i18n";
     title: { type: "string", required: true },
     subtitle: { type: "string" },
     buttonLabel: { type: "string" },
-    buttonLink: { type: "string" },
   },
 })
 export default class BlockHero extends Component {
+  get buttonLink() {
+    return settings.hero_banner[0]?.button_link;
+  }
+
   <template>
     <div class="block-hero__layout">
       <div class="block-hero__content">
@@ -24,10 +27,10 @@ export default class BlockHero extends Component {
             {{i18n (themePrefix @subtitle)}}
           </p>
         {{/if}}
-        {{#if @buttonLink}}
+        {{#if this.buttonLink}}
           <DButton
             class="btn-primary block-hero__button"
-            @href={{@buttonLink}}
+            @href={{this.buttonLink}}
             @translatedLabel={{i18n (themePrefix @buttonLabel)}}
           />
         {{/if}}

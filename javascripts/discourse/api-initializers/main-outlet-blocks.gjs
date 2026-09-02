@@ -11,17 +11,12 @@ export default apiInitializer((api) => {
         title: "hero.title",
         subtitle: "hero.subtitle",
         buttonLabel: "hero.button_label",
-        buttonLink: "/signup",
       },
       conditions: { type: "route", pages: ["HOMEPAGE"] },
     },
     {
       block: BlockCategoryBanner,
       id: "category-banner",
-      args: {
-        showDescription: true,
-        showLogo: true,
-      },
       conditions: { type: "route", pages: ["CATEGORY_PAGES"] },
     },
   ]);

@@ -1,82 +1,160 @@
-featured_topics_tag:
-  default: ""
-  type: string
+hero_banner:
+  type: objects
+  default:
+    - button_link: "/signup"
+  schema:
+    name: hero_banner
+    properties:
+      button_link:
+        type: string
 
-featured_topics_count:
-  default: 3
-  type: integer
-  min: 1
-  max: 20
+featured_topics:
+  type: objects
+  default:
+    - count: 3
+  schema:
+    name: featured_topics
+    properties:
+      tag:
+        type: tags
+        validations:
+          max: 1
+      count:
+        type: integer
+        validations:
+          min: 1
+          max: 20
 
-featured_list_count:
-  default: 10
-  type: integer
-  min: 1
-  max: 30
+featured_list:
+  type: objects
+  default:
+    - count: 10
+      filter: latest
+  schema:
+    name: featured_list
+    properties:
+      count:
+        type: integer
+        validations:
+          min: 1
+          max: 30
+      filter:
+        type: enum
+        choices:
+          - latest
+          - top
+          - new
+          - hot
 
-featured_list_filter:
-  default: "latest"
-  type: enum
-  choices:
-    - latest
-    - top
-    - new
-    - hot
+leaderboard:
+  type: objects
+  default:
+    - count: 8
+  schema:
+    name: leaderboard
+    properties:
+      count:
+        type: integer
+        validations:
+          min: 1
+          max: 20
 
-leaderboard_count:
-  default: 8
-  type: integer
-  min: 1
-  max: 20
+upcoming_events:
+  type: objects
+  default:
+    - count: 5
+  schema:
+    name: upcoming_events
+    properties:
+      count:
+        type: integer
+        validations:
+          min: 1
+          max: 15
 
-events_count:
-  default: 5
-  type: integer
-  min: 1
-  max: 15
+badges_ticker:
+  type: objects
+  default:
+    - placement: homepage-sidebar
+      count: 6
+      gold: true
+      silver: true
+      bronze: true
+  schema:
+    name: badges_ticker
+    properties:
+      placement:
+        type: enum
+        choices:
+          - homepage-main
+          - homepage-sidebar
+          - none
+      count:
+        type: integer
+        validations:
+          min: 1
+          max: 50
+      badge_ids:
+        type: string
+      gold:
+        type: boolean
+      silver:
+        type: boolean
+      bronze:
+        type: boolean
 
-sidebar_category_id:
-  default: 4
-  type: integer
+cta_banner:
+  type: objects
+  default:
+    - link: "/signup"
+  schema:
+    name: cta_banner
+    properties:
+      link:
+        type: string
 
-sidebar_tags_count:
-  default: 10
-  type: integer
-  min: 1
-  max: 30
+category_banner:
+  type: objects
+  default:
+    - show_description: true
+      show_logo: true
+  schema:
+    name: category_banner
+    properties:
+      categories:
+        type: categories
+      show_description:
+        type: boolean
+      show_logo:
+        type: boolean
 
-banner_categories:
-  type: list
-  list_type: category
-  default: ""
+category_topics:
+  type: objects
+  default:
+    - category: [4]
+      count: 8
+  schema:
+    name: category_topics
+    properties:
+      category:
+        type: categories
+        validations:
+          max: 1
+      count:
+        type: integer
+        validations:
+          min: 1
+          max: 20
 
-cta_link:
-  default: "/signup"
-  type: string
-
-badges_ticker_location:
-  default: "sidebar"
-  type: enum
-  choices:
-    - main
-    - sidebar
-    - none
-
-badges_ticker_count:
-  default: 6
-  type: integer
-  min: 1
-  max: 50
-
-badges_ticker_badge_ids:
-  type: list
-  default: ""
-
-badges_ticker_tiers:
-  type: list
-  list_type: compact
-  default: ""
-  choices:
-    - gold
-    - silver
-    - bronze
+top_tags:
+  type: objects
+  default:
+    - count: 10
+  schema:
+    name: top_tags
+    properties:
+      count:
+        type: integer
+        validations:
+          min: 1
+          max: 30

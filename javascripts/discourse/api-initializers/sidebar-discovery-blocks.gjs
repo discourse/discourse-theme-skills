@@ -7,10 +7,6 @@ export default apiInitializer((api) => {
     {
       block: BlockCategoryTopics,
       id: "sidebar-category-topics",
-      args: {
-        categoryId: settings.sidebar_category_id,
-        count: 8,
-      },
       conditions: [
         {
           type: "route",
@@ -25,7 +21,6 @@ export default apiInitializer((api) => {
       id: "sidebar-top-tags",
       args: {
         title: "sidebar.top_tags.title",
-        count: settings.sidebar_tags_count,
       },
       conditions: [
         {
