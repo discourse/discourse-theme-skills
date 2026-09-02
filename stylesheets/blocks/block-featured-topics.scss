@@ -6,10 +6,7 @@
   }
 
   &__header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-3);
+    @include section-header;
   }
 
   &__heading {
@@ -17,9 +14,7 @@
   }
 
   &__link {
-    font-weight: 600;
-    color: var(--skills-accent);
-    white-space: nowrap;
+    @include section-link;
   }
 
   &__grid {

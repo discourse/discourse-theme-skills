@@ -147,9 +147,16 @@ export default class BlockBadgesTicker extends Component {
         {{#if grants.length}}
           <section class="block-badges-ticker {{this.variantClass}}">
             {{#if @title}}
-              <h3 class="block-badges-ticker__title">
-                {{i18n (themePrefix @title)}}
-              </h3>
+              <div class="block-badges-ticker__header">
+                <h3 class="block-badges-ticker__title">
+                  {{i18n (themePrefix @title)}}
+                </h3>
+                {{#if @buttonLabel}}
+                  <a href="/badges" class="block-badges-ticker__link">
+                    {{i18n (themePrefix @buttonLabel)}}
+                  </a>
+                {{/if}}
+              </div>
             {{/if}}
 
             <div class="block-badges-ticker__scroller">

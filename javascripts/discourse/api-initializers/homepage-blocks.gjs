@@ -42,6 +42,7 @@ export default apiInitializer((api) => {
       id: "badges-ticker",
       args: {
         title: "homepage.badges_ticker.title",
+        buttonLabel: "homepage.badges_ticker.button_label",
         variant: "ticker",
         count: settings.badges_ticker_count,
         badgeIds: idList(settings.badges_ticker_badge_ids),

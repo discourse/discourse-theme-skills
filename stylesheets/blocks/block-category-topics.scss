@@ -1,12 +1,12 @@
 .block-category-topics {
   &__layout {
-    @include card;
+    @include panel;
     display: flex;
     flex-direction: column;
   }
 
   &__header {
-    @include card-header;
+    @include panel-header;
 
     .badge-category__name {
       @include section-title;
@@ -15,7 +15,7 @@
   }
 
   &__list {
-    @include card-body;
+    @include panel-body;
     display: flex;
     flex-direction: column;
     gap: var(--space-2);

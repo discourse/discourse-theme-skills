@@ -1,17 +1,32 @@
-@mixin card {
+// Panels: chrome for whole blocks rendered as a container
+// (sidebar-style blocks, boxed lists)
+@mixin panel {
   background: var(--secondary);
   border: 1px solid var(--primary-200);
   border-radius: var(--d-border-radius-large);
   overflow: hidden;
 }
 
-@mixin card-header {
+@mixin panel-header {
   padding: var(--card-padding);
   border-bottom: 1px solid var(--primary-200);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+}
+
+@mixin panel-body {
+  padding: var(--card-padding);
+}
+
+// Cards: chrome for individual content items laid out on the surface,
+// below a section header
+@mixin card {
+  background: var(--secondary);
+  border: 1px solid var(--primary-200);
+  border-radius: var(--d-border-radius-large);
+  overflow: hidden;
 }
 
 @mixin card-body {
@@ -23,4 +38,17 @@
   font-size: var(--font-up-2);
   letter-spacing: -0.02em;
   margin: 0;
+}
+
+@mixin section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+@mixin section-link {
+  font-weight: 600;
+  color: var(--skills-accent);
+  white-space: nowrap;
 }

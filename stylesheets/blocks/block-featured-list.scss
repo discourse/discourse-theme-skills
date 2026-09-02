@@ -1,12 +1,12 @@
 .block-featured-list {
   &__layout {
-    @include card;
+    @include panel;
     display: flex;
     flex-direction: column;
   }
 
   &__header {
-    @include card-header;
+    @include panel-header;
   }
 
   &__title {
@@ -14,9 +14,7 @@
   }
 
   &__link {
-    white-space: nowrap;
-    font-weight: 600;
-    color: var(--skills-accent);
+    @include section-link;
   }
 
   &__list {

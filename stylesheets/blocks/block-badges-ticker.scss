@@ -1,19 +1,25 @@
 // Sidebar / narrow layout: a card matching the leaderboard block, one member
 // per row with the badge on its own line
 @mixin badges-ticker-rows {
-  @include card;
+  @include panel;
   display: flex;
   flex-direction: column;
 
+  .block-badges-ticker__header {
+    @include panel-header;
+  }
+
   .block-badges-ticker__title {
-    @include card-header;
     @include section-title;
     font-size: var(--font-up-1);
-    margin: 0;
+  }
+
+  .block-badges-ticker__link {
+    display: none;
   }
 
   .block-badges-ticker__track {
-    @include card-body;
+    @include panel-body;
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
@@ -81,6 +87,26 @@
 // Main content / wide layout: horizontal strip of member cards,
 // navigated with prev/next arrows (no auto-scrolling)
 @mixin badges-ticker-ticker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+
+  .block-badges-ticker__header {
+    @include section-header;
+  }
+
+  .block-badges-ticker__title {
+    @include section-title;
+  }
+
+  .block-badges-ticker__link {
+    @include section-link;
+  }
+
+  .block-badges-ticker__button {
+    display: none;
+  }
+
   .block-badges-ticker__scroller {
     display: flex;
     align-items: center;
@@ -113,20 +139,26 @@
     display: flex;
     gap: var(--space-4);
     margin: 0;
-    padding: var(--space-1) var(--space-4);
+    padding: var(--space-2) var(--space-4);
     list-style: none;
   }
 
   .badge-ticker-entry {
+    @include card;
+    @include card-body;
     display: flex;
     flex: none;
     flex-direction: column;
     align-items: center;
     gap: var(--space-2);
-    padding: var(--space-3);
-    background: var(--secondary);
-    border: 1px solid var(--primary-low);
-    border-radius: var(--d-border-radius);
+    transition:
+      box-shadow 0.15s ease,
+      transform 0.15s ease;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgb(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
 
     &__avatar .avatar {
       width: 4rem;
@@ -154,11 +186,6 @@
 }
 
 .block-badges-ticker {
-  &__title {
-    margin: 0 0 var(--space-2);
-    font-size: var(--font-up-1);
-  }
-
   &__arrow {
     display: none;
   }

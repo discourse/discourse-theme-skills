@@ -1,18 +1,18 @@
 .block-top-tags {
   &__layout {
-    @include card;
+    @include panel;
     display: flex;
     flex-direction: column;
   }
 
   &__title {
-    @include card-header;
+    @include panel-header;
     @include section-title;
     font-size: var(--font-up-1);
   }
 
   &__list {
-    @include card-body;
+    @include panel-body;
     list-style: none;
     margin: 0;
     display: flex;
