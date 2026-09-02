@@ -12,6 +12,10 @@ en:
       sidebar_tags_count: "Number of tags shown in sidebar"
       banner_categories: "Categories that display a banner"
       cta_link: "URL for the call-to-action button"
+      badges_ticker_location: "Where the recently earned badges block renders on the homepage"
+      badges_ticker_count: "Maximum number of members in the badges block"
+      badges_ticker_badge_ids: "Only feature these badge IDs (empty = all enabled badges)"
+      badges_ticker_tiers: "Only feature badges of these tiers (empty = all tiers)"
   hero:
     title: "Build something great together"
     subtitle: "A community for makers, thinkers, and doers. Ask questions, share ideas, and level up."
@@ -34,6 +38,9 @@ en:
       title: "Ready to join the conversation?"
       description: "Create an account to ask questions, share what you know, and connect with the community."
       button_label: "Sign up now"
+    badges_ticker:
+      title: "Recently earned"
+      button_label: "See all badges"
   category_banner:
     fallback_description: "Explore topics in this category"
   sidebar:
@@ -42,3 +49,6 @@ en:
       title: "Trending in category"
     top_tags:
       title: "Popular tags"
+  badges_ticker:
+    previous: "Scroll back"
+    next: "Scroll forward"
