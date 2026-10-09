@@ -93,7 +93,7 @@ export default class BlockHero extends Component {
 | `container`           | boolean                  | Whether this block renders children              |
 | `allowedOutlets`      | string[]                 | Restrict to specific outlets                     |
 | `deniedOutlets`       | string[]                 | Exclude from specific outlets                    |
-| `decoratorClassNames` | string \| string[] \| fn | Extra CSS classes on the wrapper                 |
+| `classNames`          | string \| string[] \| fn | Extra CSS classes on the wrapper                 |
 | `constraints`         | object                   | Cross-arg validation rules                       |
 
 ### Args Schema
@@ -117,14 +117,14 @@ Property applicability by type: `min`/`max`/`integer` → number; `minLength`/`m
 
 ### Dynamic CSS Classes
 
-`decoratorClassNames` can be a function that receives the block's args:
+`classNames` can be a function that receives the block's args:
 
 ```javascript
 @block("theme:my-theme:card", {
   args: {
     variant: { type: "string", enum: ["compact", "full"] },
   },
-  decoratorClassNames: (args) => `--${args.variant}`,
+  classNames: (args) => `--${args.variant}`,
 })
 ```
 
