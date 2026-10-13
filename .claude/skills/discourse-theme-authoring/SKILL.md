@@ -1,6 +1,6 @@
 ---
 name: discourse-theme-authoring
-description: Use when creating, developing, or modifying Discourse themes and theme components — covers scaffolding, SCSS architecture, BEM CSS, viewport design, localization, settings, icons, value transformers, theme modifiers, and CSS variables
+description: Use when creating, developing, or modifying Discourse themes and theme components — covers scaffolding, SCSS architecture, BEM CSS, container and viewport queries, localization, settings, icons, value transformers, theme modifiers, CSS variables and theme tokens
 ---
 
 # Discourse Theme Authoring
@@ -138,33 +138,40 @@ stylesheets/
 ├── brand/
 │   ├── _index.scss      # @import "fonts"; @import "colors";
 │   ├── fonts.scss
-│   └── colors.scss
+│   └── colors.scss      # color tokens with their light-dark() values, on :root
 ├── app/
-│   ├── _index.scss      # @import "variables"; @import "header"; ...
-│   ├── variables.scss
+│   ├── _index.scss      # @import "variables"; @import "mixins"; @import "header"; ...
+│   ├── variables.scss   # other theme tokens and core --d-* overrides, on :root
+│   ├── mixins.scss
 │   ├── header.scss
 │   ├── sidebar.scss
 │   ├── buttons.scss
 │   └── topic-list.scss
+├── components/
+│   ├── _index.scss      # @import "block-panel"; ...
+│   └── block-panel.scss # styles of shared components in javascripts/discourse/components
 ├── blocks/
 │   ├── _index.scss      # @import "block-hero"; @import "block-featured-list"; ...
 │   ├── block-hero.scss
 │   └── block-featured-list.scss
 └── layouts/
-    ├── _index.scss      # @import "homepage"; @import "sidebar-discovery";
+    ├── _index.scss      # @import "homepage"; @import "main-outlet";
     ├── homepage.scss
-    └── sidebar-discovery.scss
+    └── main-outlet.scss
 ```
 
 ### common.scss
 
 ```scss
-@use "lib/viewport";
+@use "lib/container";
 @import "brand";
 @import "app";
+@import "components";
 @import "blocks";
 @import "layouts";
 ```
+
+Add `@use "lib/viewport";` next to it when a file needs viewport mixins.
 
 Rules:
 - `common.scss` imports top-level folders only, never individual files
@@ -253,11 +260,30 @@ For conditional states, use `is-` and `has-` prefixes:
 - Modifiers are standalone classes (`--modifier`), not chained to the element name
 - Prefer indirect modifiers (on the parent block) over repeating modifiers on every child
 
-## Viewport Library
+## Container Queries and Viewport
 
-**Never use raw CSS media queries.** Use the viewport library from Discourse core.
+**Never use raw CSS media or container queries, and never hand-written widths.** Use the core `lib/container` and `lib/viewport` mixins with the library breakpoints.
 
-### SCSS Mixins
+**Prefer container queries for layout.** A layout should respond to the space it actually gets: with the sidebar open, the main column is far narrower than the viewport. Make the outlet or wrapper a size container and query it:
+
+```scss
+.homepage-blocks {
+  container-type: inline-size;
+  container-name: homepage-blocks;
+
+  @include container.from(md, homepage-blocks) {
+    &__layout {
+      grid-template-columns: 2fr 1fr;
+    }
+  }
+}
+```
+
+An element cannot query its own size, so the container is always an ancestor of what changes. Name containers after the element that defines them. `container.from`, `container.until` and `container.between` take the same breakpoints as the viewport mixins, plus `xs` (20rem).
+
+Keep viewport queries for genuinely device-level things: header height, the mobile drawer, touch targets.
+
+### Viewport Mixins
 
 If `common.scss` already has `@use "lib/viewport"`, all `@import`ed files inherit the namespace — no per-file import needed. Otherwise, add `@use "lib/viewport"` at the top of the file that uses it.
 
@@ -277,8 +303,11 @@ If `common.scss` already has `@use "lib/viewport"`, all `@import`ed files inheri
 
 ### Breakpoints
 
+Shared by the container and viewport libraries (`lib/breakpoints`):
+
 | Breakpoint | Size   | Pixels (at 16px base) |
 |------------|--------|-----------------------|
+| xs         | 20rem  | 320px (container only) |
 | sm         | 40rem  | 640px                 |
 | md         | 48rem  | 768px                 |
 | lg         | 64rem  | 1024px                |
@@ -680,7 +709,36 @@ api.registerBehaviorTransformer("topic-list-item-click", ({ next, context }) => 
 
 ## CSS Variables
 
-Discourse defines ~400 CSS custom properties. Override them in your theme's SCSS. See `css-variables.md` for the full listing.
+Discourse defines ~400 CSS custom properties. Override them in your theme's SCSS — on `:root`, never `body`. See `css-variables.md` for the full listing.
+
+### Theme Tokens
+
+Values a theme introduces are CSS custom properties named by the Discourse naming spec, declared on `:root`: color tokens in `brand/colors.scss`, all others (shadows, spacing, sizes) in `app/variables.scss`:
+
+```
+--t-{Theme}[-{part}]-{category}[-{property}][-{role}][-{variant}][-{state}]   themes
+--tc-{Component}[-{Component}][-{part}]-{category}-…                          theme components
+```
+
+- **Owner** is PascalCase of the `about.json` name (`Discovery Sidebar` → `DiscoverySidebar`); everything after it is lowercase. A theme component's own component files can add a second PascalCase segment (`--tc-DiscoverySidebar-BlockPanel-color-background`).
+- **Category** is one of `color`, `font`, `shadow`, `space`, `size`, `border`, `outline`, `opacity`, `motion`; property, role, variant and state come from closed lists (`color-text-muted`, `color-background-accent-subtle`, `space-gap-inline`, `size-inline`, `border-radius`).
+- **Part** is one free lowercase word for an element without a role of its own (`--t-Skills-event-color-background`).
+- **Values live in the tokens.** A color token holds its `light-dark()` value directly — no separate palette layer and no SCSS `$variables`. Component stylesheets reference tokens or core variables and never contain a literal color.
+
+```scss
+// brand/colors.scss
+:root {
+  --t-Skills-color-text-accent: light-dark(#06f, #4d9fff);
+  --t-Skills-color-background-sunken: light-dark(#fafaf9, #34302e);
+}
+
+// app/variables.scss
+:root {
+  --t-Skills-shadow-raised: 0 4px 12px rgb(0 0 0 / 10%);
+}
+```
+
+### Core Variables
 
 Key variable categories and examples:
 
@@ -747,7 +805,9 @@ Only skip examples when the failure is caused by intentional theme behavior, not
 | Settings type managers | `lib/theme_settings_manager/*.rb` |
 | SVG sprite / icon system | `lib/svg_sprite.rb` |
 | Icon library (frontend) | `frontend/discourse/app/lib/icon-library.js` |
+| Container SCSS library | `app/assets/stylesheets/lib/container.scss` |
 | Viewport SCSS library | `app/assets/stylesheets/lib/viewport.scss` |
+| Breakpoint scale | `app/assets/stylesheets/lib/breakpoints.scss` |
 | Capabilities service (viewport JS) | `frontend/discourse/app/services/capabilities.js` |
 | Color definitions | `app/assets/stylesheets/color_definitions.scss` |
 | Plugin API (transformers) | `frontend/discourse/app/lib/plugin-api.gjs` |

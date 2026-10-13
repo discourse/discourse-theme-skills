@@ -1,6 +1,6 @@
 ---
 name: discourse-block-authoring
-description: Use when creating, registering, or rendering Discourse block components in themes — covers the @block decorator, plugin API registration, outlets, conditions, container blocks, async data, and testing
+description: Use when creating, registering, or rendering Discourse block components in themes — covers the @block decorator, plugin API registration, layout files and settings, outlets, conditions, container blocks, async data in panels, and testing
 ---
 
 # Discourse Block Authoring
@@ -18,13 +18,18 @@ javascripts/discourse/
 │   ├── hero-blocks.gjs
 │   ├── sidebar-discovery-blocks.gjs
 │   └── main-outlet-blocks.gjs
-└── blocks/
-    ├── block-hero.gjs             # always prefixed block-
-    ├── block-featured-list.gjs
-    └── block-leaderboard.gjs
+├── blocks/
+│   ├── block-hero.gjs             # always prefixed block-
+│   ├── block-featured-list.gjs
+│   └── block-leaderboard.gjs
+├── components/
+│   └── block-panel.gjs            # shared chrome used by several blocks
+└── lib/
+    └── events.js                  # data helpers shared by blocks
 ```
 
 - Block files are always named `block-*.gjs` inside `blocks/`
+- Components shared by blocks (the panel, its skeleton) live in `components/`; data helpers in `lib/`
 - Initializer files are named after the outlet they configure (e.g., `homepage-blocks.gjs`)
 - **Exactly one initializer file per outlet, and exactly one outlet per initializer file.** Never call `api.renderBlocks()` for two different outlets in the same file. If you need to render into `main-outlet-blocks` and `homepage-blocks`, create two separate initializer files.
 
@@ -151,47 +156,105 @@ Available constraint types: `atLeastOne`, `exactlyOne`, `allOrNone`, `atMostOne`
 
 ### Async Data
 
-Use `DAsyncContent` with a `@bind` fetch method for blocks that load data:
+Blocks that load data render inside a shared panel component (see `javascripts/discourse/components/block-panel.gjs` in this repo). The panel owns the chrome — header (icon + title), body, footer with one link — and wraps only the body in `DAsyncContent`, so the header and footer stay put while data loads:
+
+- **Loading:** a skeleton shaped like the rows it replaces (`@skeleton={{hash rows="user" count=@count}}`), never a spinner, so the panel keeps its height.
+- **Errors:** pass `@onRetry`; a failed load shows a message and a retry button. Retry by bumping a tracked counter that is part of `@context`, which makes `DAsyncContent` refetch.
+- **Missing plugin:** treat a 403/404 from a plugin endpoint as "not available" and render nothing, instead of relying only on a setting condition.
+- **Empty:** return `null` from the fetch for "no data" and either yield `<:empty>` or hide the block.
 
 ```javascript
 import Component from "@glimmer/component";
-import { service } from "@ember/service";
+import { tracked } from "@glimmer/tracking";
+import { hash } from "@ember/helper";
+import { themePrefix } from "virtual:theme";
 import { block } from "discourse/blocks";
-import DAsyncContent from "discourse/ui-kit/d-async-content";
-import { bind } from "discourse/lib/decorators";
 import { ajax } from "discourse/lib/ajax";
+import { bind } from "discourse/lib/decorators";
+import { i18n } from "discourse-i18n";
+import BlockPanel from "../components/block-panel";
 
 @block("theme:my-theme:leaderboard", {
   args: {
-    count: { type: "number", default: 10 },
+    title: { type: "string", required: true },
+    icon: { type: "string" },
+    count: { type: "number", default: 8 },
+    linkLabel: { type: "string", required: true },
   },
 })
 export default class BlockLeaderboard extends Component {
-  @service currentUser;
+  @tracked unavailable = false;
+  @tracked retryCount = 0;
+
+  get context() {
+    return { count: this.args.count, retryCount: this.retryCount };
+  }
 
   @bind
-  async fetchData() {
-    const data = await ajax("/leaderboard", { data: { user_limit: this.args.count } });
-    return data.users;
+  retry() {
+    this.retryCount++;
+  }
+
+  @bind
+  async fetchLeaderboard({ count }) {
+    try {
+      const data = await ajax("/leaderboard", { data: { user_limit: count } });
+      return data.users?.length ? data.users : null;
+    } catch (error) {
+      if (error.jqXHR?.status === 403 || error.jqXHR?.status === 404) {
+        if (!this.isDestroying && !this.isDestroyed) {
+          this.unavailable = true;
+        }
+        return null;
+      }
+      throw error;
+    }
   }
 
   <template>
-    <DAsyncContent @asyncData={{this.fetchData}}>
-      <:loading><div class="spinner" /></:loading>
-      <:empty><p>No data</p></:empty>
-      <:content as |users|>
-        {{! render users }}
-      </:content>
-    </DAsyncContent>
+    {{#unless this.unavailable}}
+      <BlockPanel
+        @title={{i18n (themePrefix @title)}}
+        @icon={{@icon}}
+        @asyncData={{this.fetchLeaderboard}}
+        @context={{this.context}}
+        @skeleton={{hash rows="user" count=@count}}
+        @onRetry={{this.retry}}
+        class="block-leaderboard"
+      >
+        <:content as |users|>{{! rows }}</:content>
+        <:footer>
+          <a class="block-panel__link" href="/leaderboard">
+            {{i18n (themePrefix @linkLabel)}}
+          </a>
+        </:footer>
+      </BlockPanel>
+    {{/unless}}
   </template>
 }
 ```
+
+### Rendering Content
+
+Reuse what core already does for its own lists, so blocks match the rest of the site:
+
+| Content | Use | Not |
+| --- | --- | --- |
+| Category name / description | `category.displayName`, `category.descriptionText` (run through the `category-display-name` / `category-description-text` transformers) | `category.name`, `category.description_text` |
+| Topic title in hand-rolled markup | `{{trustHTML topic.fancyTitle}}` (emoji, censored words) | `topic.title` |
+| Counts | `dNumber` helper, or `number()` from `discourse/lib/formatter` inside a translated string (`%{formatted_number} topics` with `count` for the plural form) | the raw number |
+| Dates | `discourse/lib/formatter` (`shortDateNoYear`, `longDate`, …) — they follow the user's locale | `Intl` with the browser locale |
+| Current category | the `discovery` service (`this.discovery.category`), which updates on navigation | parsing router params once on insert |
+| Tags | `site.top_tags` for popular tags; link to `/tag/{slug}/{id}` | fetching all of `/tags.json`; `/tag/{name}` |
+| Values in URLs | `encodeURIComponent` for tags and other free text; `getURL` for site paths | string concatenation |
 
 ## Rendering Blocks
 
 Import block classes and pass them to `api.renderBlocks()` in an `apiInitializer`. Always use `apiInitializer` (not `apiPreInitializer`) for `renderBlocks` calls.
 
-**Initializers are layout files.** They exist to make the layout readable: one `api.renderBlocks()` call with a declarative list of entries — `block`, `id`, `args`, `conditions`, `children` — and nothing else. No helper functions, no intermediate constants, no conditional spreads, no data mapping, no comments. Args carry only display-string i18n keys and layout variants; functional configuration (counts, tags, categories, URLs) lives in theme settings that the block reads itself (see Theme Settings below).
+**Initializers are layout files, and settings stay visible in them.** One `api.renderBlocks()` call with a declarative list of entries — `block`, `id`, `args`, `conditions`, `children`. The layout is where theme settings meet blocks: read `settings` here and pass the values as args (counts, tags, categories, URLs), next to the display-string i18n keys. Someone reading the layout file then sees the whole configuration — which block shows where, with what — without opening every block. Blocks get everything through args and never read `settings` themselves.
+
+Keep shaping light and inline (`settings.banner_categories.split("|").filter(Boolean).map(Number)`). When settings hold one entry per scope (e.g. per category), map each entry to a layout entry in place so the ordering stays visible; small helpers for repeated condition shapes can live in `lib/`.
 
 ```javascript
 import BlockGroup from "discourse/blocks/builtin/block-group";
@@ -207,8 +270,10 @@ export default apiInitializer((api) => {
       id: "featured-list",
       args: {
         title: "homepage.featured_list.title",
-        linkText: "homepage.featured_list.link_text",
+        linkLabel: "homepage.featured_list.link_label",
         linkUrl: "/latest",
+        count: settings.featured_list_count,
+        filter: settings.featured_list_filter,
       },
     },
     {
@@ -219,7 +284,15 @@ export default apiInitializer((api) => {
         {
           block: BlockLeaderboard,
           id: "homepage-leaderboard",
-          args: { title: "homepage.leaderboard.title" },
+          args: {
+            title: "homepage.leaderboard.title",
+            count: settings.leaderboard_count,
+          },
+          conditions: {
+            type: "setting",
+            name: "discourse_gamification_enabled",
+            enabled: true,
+          },
         },
       ],
     },
@@ -269,43 +342,49 @@ Each outlet renders a BEM structure using the outlet name as the block:
 - `.homepage-blocks__block--{id}` — wrapper for individual blocks (modifier from `id`)
 - `.homepage-blocks__block-container--{id}` — wrapper for container blocks like BlockGroup (modifier from `id`)
 
-Use these BEM elements and modifiers to style the layout:
+Use these BEM elements and modifiers to style the layout. Make the outlet wrapper a size container and switch columns with the core `lib/container` mixins (library breakpoints only), so the layout follows the space it gets — an open sidebar counts — rather than the viewport:
 
 ```scss
 .homepage-blocks {
+  container-type: inline-size;
+  container-name: homepage-blocks;
+
   &__layout {
     display: grid;
     gap: var(--space-3);
     grid-template-columns: 1fr;
+    grid-template-areas: "featured-list" "main-right";
   }
 
-  &__block-container {
-    &--main-grid {
-      display: grid;
+  @include container.from(md, homepage-blocks) {
+    // two columns only while the right column renders something
+    &__layout:has(.homepage-blocks__block-container--main-right .block-panel) {
+      grid-template-areas: "featured-list main-right";
       grid-template-columns: 2fr 1fr;
-      gap: var(--space-3);
-    }
-
-    &--sidebar {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-4);
-
-      &:empty {
-        display: none;
-      }
     }
   }
 
-  &__block {
-    &--featured-topics {
-      grid-area: featured-topics;
+  &__block--featured-list {
+    grid-area: featured-list;
+  }
+
+  &__block-container--main-right {
+    grid-area: main-right;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+
+    // core keeps a wrapper per block even when the block renders nothing,
+    // so `:empty` never matches; test for content instead
+    &:not(:has(.block-panel)),
+    .homepage-blocks__block:not(:has(.block-panel)) {
+      display: none;
     }
   }
 }
 ```
 
-Always assign an `id` to BlockGroup entries used for layout structure so you can target them via `&__block-container--{id}` in SCSS. Individual blocks are targeted via `&__block--{id}`.
+Give an entry an `id` when you style it — it becomes the `--{id}` modifier. The `id` is optional otherwise: a group that only carries conditions doesn't need one.
 
 ## Translations & Theme Settings
 
@@ -339,7 +418,7 @@ en:
 }
 ```
 
-**Key rule:** Display strings (titles, labels) are hardcoded i18n keys in the initializer and resolved via `themePrefix` in the template. Functional values (URLs, counts, tags, filters) come from theme settings that the block reads itself. Do NOT put display strings in the settings schema, and do NOT read or map settings in the initializer.
+**Key rule:** Display strings (titles, labels) are hardcoded i18n keys in the initializer and resolved via `themePrefix` in the template. Functional values (URLs, counts, tags, filters) come from theme settings, read in the initializer and passed as args. Do NOT put display strings in the settings schema.
 
 Strings hardcoded directly in the template (not passed as args) also use `themePrefix`:
 
@@ -349,24 +428,21 @@ Strings hardcoded directly in the template (not passed as args) also use `themeP
 
 ### Theme Settings
 
-Theme settings are available via the global `settings` object. Blocks read their own settings internally — give each block one `objects`-type setting named after it (a structured per-block editor in admin) and expose it via a `config` getter:
+Theme settings are available via the global `settings` object in the initializer. Pick the simplest type that fits each need — an `integer`, an `enum`, a `list` with `list_type: tag` or `category` — named `<block>_<thing>` (`leaderboard_count`, `featured_topics_tag`). List blocks get a `_count` setting. Use an `objects` setting only for genuinely repeating structured entries, such as one entry per category scope.
 
 ```javascript
-export default class BlockLeaderboard extends Component {
-  get config() {
-    return settings.leaderboard[0] ?? {};
-  }
-
-  @bind
-  async fetchData() {
-    return await ajax("/leaderboard", {
-      data: { user_limit: this.config.count ?? 8 },
-    });
-  }
+{
+  block: BlockFeaturedTopics,
+  id: "featured-topics",
+  args: {
+    title: "homepage.featured_topics.title",
+    tag: settings.featured_topics_tag,
+    count: settings.featured_topics_count,
+  },
 }
 ```
 
-A block that needs configuration to work (a tag, a category) renders nothing when unconfigured — guard the template — so its layout entry stays unconditional. The one settings read allowed in an initializer is inside a `conditions` object, where a settings entry can serve as the condition source (see Setting Condition).
+A block that needs configuration to work (a tag, a category) renders nothing when unconfigured — guard the template — or the layout gates it with a setting condition (see Setting Condition).
 
 ## Conditions
 
@@ -489,7 +565,7 @@ Match by user state. All specified conditions use AND logic. When `source` is pr
 
 ### Setting Condition
 
-Match by site setting or theme setting values. Supports multiple check types:
+Match by site setting or theme setting values. An unknown setting name evaluates to `false` without an error, so a renamed plugin setting silently hides the block — check the current name in the plugin's `config/settings.yml` (e.g. the events plugin uses `discourse_events_enabled`, gamification `discourse_gamification_enabled`). Supports multiple check types:
 
 | Check         | Setting Type          | Question                                   |
 | ------------- | --------------------- | ------------------------------------------ |
@@ -521,13 +597,13 @@ Match by site setting or theme setting values. Supports multiple check types:
 
 // `source` accepts ANY object — e.g. one entry of an objects-type setting,
 // letting conditions match nested per-block configuration
-const badges = settings.badges_ticker[0] ?? {};
-{ type: "setting", source: badges, name: "placement", equals: "sidebar" }
+const topicList = settings.topic_lists[0] ?? {};
+{ type: "setting", source: topicList, name: "list", equals: "top" }
 ```
 
 ### Viewport Condition
 
-Match by screen size using breakpoints (`sm`, `md`, `lg`, `xl`, `2xl`) and touch capability. For simple show/hide, prefer CSS media queries via the viewport SCSS library — use this condition when you need to remove components from the DOM entirely.
+Match by screen size using breakpoints (`sm`, `md`, `lg`, `xl`, `2xl`) and touch capability. For layout and show/hide, prefer CSS container queries on the outlet (see Styling Outlet Layouts) — the viewport ignores an open sidebar. Use this condition only when a block must not be in the DOM at all.
 
 ```javascript
 // Large screens only (lg and up)
@@ -553,7 +629,10 @@ At least one of `min`, `max`, or `touch` must be specified.
 Match on args passed via `@outletArgs` using dot-notation paths:
 
 ```javascript
-{ type: "outlet-arg", name: "post.staff", value: true }
+{ type: "outlet-arg", path: "post.staff", value: true }
+
+// An array value matches any of its elements
+{ type: "outlet-arg", path: "category.id", value: [5, 6] }
 ```
 
 ## Container Blocks
@@ -661,7 +740,12 @@ module("My block tests", function (hooks) {
 | Using `oneOf` in an args schema                    | Use `enum` (string/number args) or `itemEnum` (array items) — `oneOf` is not a valid schema property                                                   |
 | Two themes/components rendering into the same outlet | An outlet accepts exactly ONE layout globally, not one per theme ("already has a layout registered"). Consolidate into one theme, or uninstall the other |
 | Gating an entry with a missing required arg via conditions | Required args are validated at `renderBlocks()` time, BEFORE conditions are evaluated — make the arg optional and let the block render nothing when unconfigured |
-| Logic in an initializer (helpers, consts, spreads, comments) | Initializers are layout files: entries and conditions only. Move settings reads and data mapping into the block (a `config` getter over its objects setting) |
+| Reading `settings` inside a block                  | Read settings in the initializer and pass them as args, so the layout shows the whole configuration                                                    |
+| A setting condition on a renamed or unknown setting | Unknown names evaluate to `false` silently — verify the name in the plugin's `config/settings.yml`                                                    |
+| `name` in an outlet-arg condition                  | The key is `path`: `{ type: "outlet-arg", path: "category.id", value: 5 }`                                                                             |
+| `:empty` on a block container                      | Core keeps a wrapper per block even when it renders nothing — use `:not(:has(.block-panel))`                                                           |
+| Viewport queries or viewport conditions for outlet layouts | Make the outlet a size container and use `container.from/until` with library breakpoints                                                       |
+| A spinner as the loading state                     | Render a skeleton shaped like the content, inside the panel body                                                                                       |
 | Importing UI components from legacy paths           | Prefer `discourse/ui-kit/*` (e.g. `discourse/ui-kit/d-button`, `d-async-content`, `d-user-link`, `helpers/d-avatar`, `helpers/d-icon`, `helpers/d-number`) — the old `discourse/components/*` and `discourse/helpers/*` paths are compatibility shims (see core `ui-kit-shims.js` for the full map) |
 | Using `trust_level` in user condition              | Use `minTrustLevel`/`maxTrustLevel` (camelCase, separate min/max)                                                                                      |
 | Using `enabled` alone in setting condition         | Always include `name`: `{ type: "setting", name: "...", enabled: true }`                                                                               |
