@@ -1,7 +1,7 @@
 .block-cta {
   &__layout {
-    background-color: var(--skills-accent);
-    color: var(--skills-text-on-dark);
+    background-color: var(--t-Skills-color-background-accent);
+    color: var(--t-Skills-color-text-inverse);
     padding: var(--space-8) var(--space-6);
     text-align: center;
     display: flex;
@@ -13,7 +13,7 @@
 
   &__title {
     margin: 0;
-    color: var(--skills-text-on-dark);
+    color: var(--t-Skills-color-text-inverse);
     max-width: 600px;
   }
 
@@ -27,15 +27,15 @@
 
   &__button {
     margin-top: var(--space-2);
-    background-color: var(--skills-text-on-dark);
-    color: var(--skills-accent);
+    background-color: var(--t-Skills-button-color-background-inverse);
+    color: var(--t-Skills-button-color-text-inverse);
     font-weight: 700;
     font-size: var(--font-up-1);
     padding: 0.75em 2em;
 
     &:hover {
-      background-color: var(--skills-warm);
-      color: var(--skills-surface-dark);
+      background-color: var(--t-Skills-button-color-background-inverse-hovered);
+      color: var(--t-Skills-button-color-text-inverse-hovered);
     }
   }
 }

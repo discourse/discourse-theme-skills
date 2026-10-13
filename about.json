@@ -12,7 +12,7 @@
   "modifiers": {
     "custom_homepage": true,
     "serialize_topic_excerpts": true,
-    "svg_icons": ["far-lightbulb", "far-gem", "far-calendar", "trophy"]
+    "svg_icons": ["far-calendar", "trophy"]
   },
   "color_schemes": {
     "Skills Light": {

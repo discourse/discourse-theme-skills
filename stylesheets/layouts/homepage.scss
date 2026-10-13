@@ -1,39 +1,30 @@
 .homepage-blocks {
+  container-type: inline-size;
+  container-name: homepage-blocks;
+
   &__layout {
     display: grid;
     gap: var(--space-3);
     grid-template-columns: 1fr;
     grid-template-areas:
       "featured-topics"
-      "badges-ticker"
       "featured-list"
       "homepage-right"
       "homepage-cta";
     margin-block: var(--space-6);
   }
 
-  @container homepage-blocks (width > 800px) {
+  // Two columns only while the right column renders a panel: its blocks
+  // hide themselves when their plugin is missing or they have no data.
+  @include container.from(md, homepage-blocks) {
     &__layout:has(
-        .homepage-blocks__block-container--homepage-right:not(:empty)
+        .homepage-blocks__block-container--homepage-right .block-panel
       ) {
       grid-template-areas:
         "featured-topics featured-topics"
-        "badges-ticker badges-ticker"
         "featured-list homepage-right"
         "homepage-cta homepage-cta";
       grid-template-columns: 2fr 1fr;
-    }
-
-    &__layout:not(
-        :has(.homepage-blocks__block-container--homepage-right:not(:empty))
-      ) {
-      grid-template-areas:
-        "featured-topics"
-        "badges-ticker"
-        "featured-list"
-        "homepage-right"
-        "homepage-cta";
-      grid-template-columns: 1fr;
     }
   }
 
@@ -44,10 +35,6 @@
 
     &--featured-topics {
       grid-area: featured-topics;
-    }
-
-    &--badges-ticker {
-      grid-area: badges-ticker;
     }
 
     &--homepage-cta {
@@ -62,7 +49,10 @@
       flex-direction: column;
       gap: var(--space-4);
 
-      &:empty {
+      // core keeps a wrapper per block even when the block renders nothing;
+      // an empty flex item would still take a gap
+      &:not(:has(.block-panel)),
+      .homepage-blocks__block:not(:has(.block-panel)) {
         display: none;
       }
     }

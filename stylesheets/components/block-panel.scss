@@ -1,0 +1,45 @@
+.block-panel {
+  @include panel;
+  display: flex;
+  flex-direction: column;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--t-Skills-card-space-padding);
+    border-bottom: 1px solid var(--t-Skills-color-border-default);
+  }
+
+  &__icon {
+    display: inline-flex;
+    color: var(--primary-medium);
+  }
+
+  &__title {
+    @include section-title;
+    font-size: var(--font-up-1);
+  }
+
+  &__body {
+    padding: var(--t-Skills-card-space-padding);
+
+    &:not(:has(*)) {
+      display: none;
+
+      + .block-panel__footer {
+        border-top: 0;
+      }
+    }
+  }
+
+  &__footer {
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--t-Skills-color-border-default);
+    text-align: center;
+  }
+
+  &__link {
+    @include section-link;
+  }
+}

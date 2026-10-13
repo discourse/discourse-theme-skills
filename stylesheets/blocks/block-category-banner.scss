@@ -5,7 +5,8 @@
     gap: var(--space-4);
     padding: var(--space-6) var(--space-4);
     margin-block-end: var(--space-4);
-    background-color: var(--skills-surface);
+    background-color: var(--t-Skills-color-background-sunken);
+    border: 1px solid var(--t-Skills-color-border-default);
     border-radius: var(--d-border-radius-large);
   }
 
@@ -26,10 +27,6 @@
 
   &__name {
     margin: 0;
-    font-size: var(--font-up-6);
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
   }
 
   &__description {

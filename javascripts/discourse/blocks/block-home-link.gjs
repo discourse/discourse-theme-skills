@@ -19,7 +19,10 @@ export default class BlockHomeLink extends Component {
   }
 
   <template>
-    <ul class="sidebar-section-link-list" aria-label="Home">
+    <ul
+      class="sidebar-section-link-list"
+      aria-label={{i18n (themePrefix @label)}}
+    >
       <li class="sidebar-section-link-wrapper">
         <a
           class="sidebar-section-link sidebar-row

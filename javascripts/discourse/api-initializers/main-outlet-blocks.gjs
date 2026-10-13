@@ -19,6 +19,10 @@ export default apiInitializer((api) => {
       block: BlockCategoryBanner,
       id: "category-banner",
       args: {
+        categoryIds: settings.banner_categories
+          .split("|")
+          .filter(Boolean)
+          .map(Number),
         showDescription: true,
         showLogo: true,
       },

@@ -1,27 +1,14 @@
 .block-upcoming-events {
-  &__layout {
-    @include panel;
-    display: flex;
-    flex-direction: column;
-  }
-
-  &__title {
-    @include panel-header;
-    @include section-title;
-    font-size: var(--font-up-1);
-  }
-
   &__list {
-    @include panel-body;
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 
   &__event {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
     padding: var(--space-3) 0;
     border-bottom: 1px solid var(--primary-100);
 
@@ -30,9 +17,27 @@
     }
   }
 
+  &__link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+
+    &,
+    &:visited,
+    &:hover,
+    &:focus-visible {
+      color: var(--primary);
+    }
+
+    &:hover .block-upcoming-events__event-title,
+    &:focus-visible .block-upcoming-events__event-title {
+      text-decoration: underline;
+    }
+  }
+
   &__date-badge {
-    background-color: var(--skills-pop);
-    color: var(--skills-text-on-dark);
+    background-color: var(--t-Skills-event-color-background);
+    color: var(--t-Skills-event-color-text);
     font-weight: 800;
     font-size: var(--font-down-1);
     padding: var(--space-1) var(--space-2);
@@ -44,11 +49,14 @@
   }
 
   &__event-info {
+    display: flex;
     flex: 1;
+    flex-direction: column;
     min-width: 0;
   }
 
   &__event-title {
+    display: block;
     font-size: var(--font-0);
     font-weight: 700;
     margin: 0;
@@ -58,10 +66,5 @@
   &__event-long-date {
     font-size: var(--font-down-1);
     color: var(--primary-medium);
-  }
-
-  &__link {
-    margin: var(--space-2) var(--space-4) var(--space-4);
-    align-self: flex-start;
   }
 }

@@ -2,35 +2,27 @@
 // (sidebar-style blocks, boxed lists)
 @mixin panel {
   background: var(--secondary);
-  border: 1px solid var(--primary-200);
+  border: 1px solid var(--t-Skills-color-border-default);
   border-radius: var(--d-border-radius-large);
   overflow: hidden;
-}
-
-@mixin panel-header {
-  padding: var(--card-padding);
-  border-bottom: 1px solid var(--primary-200);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-@mixin panel-body {
-  padding: var(--card-padding);
 }
 
 // Cards: chrome for individual content items laid out on the surface,
-// below a section header
+// below a section header. Cards are links, so they lift on hover.
 @mixin card {
-  background: var(--secondary);
-  border: 1px solid var(--primary-200);
-  border-radius: var(--d-border-radius-large);
-  overflow: hidden;
+  @include panel;
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+
+  &:hover {
+    box-shadow: var(--t-Skills-shadow-raised);
+    transform: translateY(-2px);
+  }
 }
 
 @mixin card-body {
-  padding: var(--card-padding);
+  padding: var(--t-Skills-card-space-padding);
 }
 
 @mixin section-title {
@@ -49,6 +41,6 @@
 
 @mixin section-link {
   font-weight: 600;
-  color: var(--skills-accent);
+  color: var(--t-Skills-color-text-accent);
   white-space: nowrap;
 }

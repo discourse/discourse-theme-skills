@@ -1,6 +1,7 @@
 featured_topics_tag:
+  type: list
+  list_type: tag
   default: ""
-  type: string
 
 featured_topics_count:
   default: 3
@@ -20,7 +21,6 @@ featured_list_filter:
   choices:
     - latest
     - top
-    - new
     - hot
 
 leaderboard_count:
@@ -35,16 +35,6 @@ events_count:
   min: 1
   max: 15
 
-sidebar_category_id:
-  default: 4
-  type: integer
-
-sidebar_tags_count:
-  default: 10
-  type: integer
-  min: 1
-  max: 30
-
 banner_categories:
   type: list
   list_type: category
@@ -53,30 +43,3 @@ banner_categories:
 cta_link:
   default: "/signup"
   type: string
-
-badges_ticker_location:
-  default: "sidebar"
-  type: enum
-  choices:
-    - main
-    - sidebar
-    - none
-
-badges_ticker_count:
-  default: 6
-  type: integer
-  min: 1
-  max: 50
-
-badges_ticker_badge_ids:
-  type: list
-  default: ""
-
-badges_ticker_tiers:
-  type: list
-  list_type: compact
-  default: ""
-  choices:
-    - gold
-    - silver
-    - bronze

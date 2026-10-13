@@ -1,17 +1,19 @@
 import Component from "@glimmer/component";
+import { tracked } from "@glimmer/tracking";
 import { service } from "@ember/service";
 import { block } from "discourse/blocks";
 import BasicTopicList from "discourse/components/basic-topic-list";
 import { bind } from "discourse/lib/decorators";
-import DAsyncContent from "discourse/ui-kit/d-async-content";
-import DButton from "discourse/ui-kit/d-button";
+import getURL from "discourse/lib/get-url";
 import { i18n } from "discourse-i18n";
+import BlockPanel from "../components/block-panel";
 
 @block("theme:skills:featured-list", {
-  description: "A filterable list of topics with heading and link",
+  description: "A filterable list of topics in a panel",
   args: {
-    title: { type: "string" },
-    linkText: { type: "string" },
+    title: { type: "string", required: true },
+    icon: { type: "string" },
+    linkLabel: { type: "string" },
     linkUrl: { type: "string" },
     count: { type: "number", default: 10 },
     filter: { type: "string", default: "latest" },
@@ -20,51 +22,59 @@ import { i18n } from "discourse-i18n";
 export default class BlockFeaturedList extends Component {
   @service store;
 
-  @bind
-  async fetchTopics() {
-    const filter = this.args.filter || "latest";
-    const count = this.args.count || 10;
+  @tracked retryCount = 0;
 
+  get skeleton() {
+    return { rows: "topic", count: this.args.count };
+  }
+
+  get context() {
+    return {
+      filter: this.args.filter,
+      count: this.args.count,
+      retryCount: this.retryCount,
+    };
+  }
+
+  @bind
+  retry() {
+    this.retryCount++;
+  }
+
+  @bind
+  async fetchTopics({ filter, count }) {
     const topicList = await this.store.findFiltered("topicList", { filter });
-    if (!topicList.topics?.length) {
-      return null;
-    }
-    return topicList.topics.slice(0, count);
+    const topics = topicList.topics?.slice(0, count) ?? [];
+    return topics.length ? topics : null;
   }
 
   <template>
-    <DAsyncContent @asyncData={{this.fetchTopics}}>
-      <:loading>
-        <div class="block-featured-list__loading"><div class="spinner" /></div>
-      </:loading>
-
-      <:empty>
-        <div class="block-featured-list__empty">
-          {{i18n "topics.none.latest"}}
-        </div>
-      </:empty>
-
+    <BlockPanel
+      @title={{i18n (themePrefix @title)}}
+      @icon={{@icon}}
+      @asyncData={{this.fetchTopics}}
+      @context={{this.context}}
+      @skeleton={{this.skeleton}}
+      @onRetry={{this.retry}}
+      class="block-featured-list"
+    >
       <:content as |topics|>
-        <div class="block-featured-list__layout">
-          {{#if @title}}
-            <div class="block-featured-list__header">
-              <h2 class="block-featured-list__title">
-                {{i18n (themePrefix @title)}}
-              </h2>
-              {{#if @linkUrl}}
-                <DButton
-                  class="btn-flat block-featured-list__link"
-                  @href={{@linkUrl}}
-                  @translatedLabel={{i18n (themePrefix @linkText)}}
-                />
-              {{/if}}
-            </div>
-          {{/if}}
-          <div class="block-featured-list__list">
-            <BasicTopicList @topics={{topics}} @showPosters="true" />
-          </div>
+        <div class="block-featured-list__list">
+          <BasicTopicList @topics={{topics}} @showPosters="true" />
         </div>
       </:content>
-    </DAsyncContent>
+      <:empty>
+        <p class="block-featured-list__empty">
+          {{i18n "topics.none.latest"}}
+        </p>
+      </:empty>
+      <:footer>
+        {{#if @linkUrl}}
+          <a class="block-panel__link" href={{getURL @linkUrl}}>
+            {{i18n (themePrefix @linkLabel)}}
+          </a>
+        {{/if}}
+      </:footer>
+    </BlockPanel>
   </template>
 }

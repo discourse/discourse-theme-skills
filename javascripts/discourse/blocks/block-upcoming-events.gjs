@@ -1,94 +1,118 @@
 import Component from "@glimmer/component";
+import { tracked } from "@glimmer/tracking";
+import { themePrefix } from "virtual:theme";
 import { block } from "discourse/blocks";
-import { ajax } from "discourse/lib/ajax";
 import { bind } from "discourse/lib/decorators";
-import { longDate, shortDateNoYear } from "discourse/lib/formatter";
-import { or } from "discourse/truth-helpers";
-import DAsyncContent from "discourse/ui-kit/d-async-content";
-import DButton from "discourse/ui-kit/d-button";
+import { longDate, shortDate, shortDateNoYear } from "discourse/lib/formatter";
+import getURL from "discourse/lib/get-url";
 import { i18n } from "discourse-i18n";
+import BlockPanel from "../components/block-panel";
+import { fetchEvents } from "../lib/events";
 
+// The next events that are not over yet, or the most recent past ones under
+// @recentTitle when none are coming up. The panel disappears when the events
+// plugin answers 403/404, and when there are no events at all.
 @block("theme:skills:upcoming-events", {
-  description: "Upcoming events from discourse-post-event plugin",
+  description: "Upcoming events from the events plugin",
   args: {
-    title: { type: "string" },
+    title: { type: "string", required: true },
+    recentTitle: { type: "string", required: true },
+    icon: { type: "string" },
     count: { type: "number", default: 5 },
-    buttonLabel: { type: "string", required: true },
     linkLabel: { type: "string" },
     linkUrl: { type: "string" },
   },
 })
 export default class BlockUpcomingEvents extends Component {
+  @tracked hidden = false;
+  @tracked recent = false;
+  @tracked retryCount = 0;
+
+  badgeDate = (event) => shortDateNoYear(event.date);
+
+  fullDate = (event) =>
+    event.allDay ? shortDate(event.date) : longDate(event.date);
+
+  get title() {
+    return i18n(
+      themePrefix(this.recent ? this.args.recentTitle : this.args.title)
+    );
+  }
+
+  get skeleton() {
+    return { rows: "event", count: this.args.count };
+  }
+
+  get context() {
+    return { count: this.args.count, retryCount: this.retryCount };
+  }
+
   @bind
-  async fetchEvents() {
-    const count = this.args.count || 5;
-    const results = await ajax("discourse-post-event/events");
-    if (!results.events?.length) {
-      return null;
+  retry() {
+    this.retryCount++;
+  }
+
+  @bind
+  async fetchEvents({ count }) {
+    try {
+      const result = await fetchEvents({ count });
+      if (!this.isDestroying && !this.isDestroyed) {
+        this.hidden = !result;
+        this.recent = !!result?.recent;
+      }
+      return result?.events;
+    } catch (error) {
+      if (error.jqXHR?.status === 403 || error.jqXHR?.status === 404) {
+        if (!this.isDestroying && !this.isDestroyed) {
+          this.hidden = true;
+        }
+        return null;
+      }
+      throw error;
     }
-    return results.events.slice(0, count);
-  }
-
-  getShortDate(startsAt) {
-    return shortDateNoYear(new Date(startsAt));
-  }
-
-  getLongDate(startsAt) {
-    return longDate(new Date(startsAt));
   }
 
   <template>
-    <DAsyncContent @asyncData={{this.fetchEvents}}>
-      <:loading>
-        <div class="block-upcoming-events__loading">
-          <div class="spinner" />
-        </div>
-      </:loading>
-
-      <:empty>
-        <div class="block-upcoming-events__empty">
-          {{i18n "discourse_post_event.events_list.empty"}}
-        </div>
-      </:empty>
-
-      <:content as |events|>
-        <div class="block-upcoming-events__layout">
-          {{#if @title}}
-            <h2 class="block-upcoming-events__title">
-              {{i18n (themePrefix @title)}}
-            </h2>
-          {{/if}}
-          <div class="block-upcoming-events__list">
-            {{#each events as |event|}}
-              <div class="block-upcoming-events__event">
-                <span class="block-upcoming-events__date-badge">
-                  {{this.getShortDate event.starts_at}}
-                </span>
-                <div class="block-upcoming-events__event-info">
-                  <h3 class="block-upcoming-events__event-title">
-                    {{or event.name event.post.topic.title}}
-                  </h3>
-                  <span class="block-upcoming-events__event-long-date">
-                    {{this.getLongDate event.starts_at}}
+    {{#unless this.hidden}}
+      <BlockPanel
+        @title={{this.title}}
+        @icon={{@icon}}
+        @asyncData={{this.fetchEvents}}
+        @context={{this.context}}
+        @skeleton={{this.skeleton}}
+        @onRetry={{this.retry}}
+        class="block-upcoming-events"
+      >
+        <:content as |events|>
+          <ol class="block-upcoming-events__list">
+            {{#each events key="id" as |event|}}
+              <li class="block-upcoming-events__event">
+                <a class="block-upcoming-events__link" href={{event.url}}>
+                  <time
+                    class="block-upcoming-events__date-badge"
+                    datetime={{event.iso}}
+                  >{{this.badgeDate event}}</time>
+                  <span class="block-upcoming-events__event-info">
+                    <span class="block-upcoming-events__event-title">
+                      {{event.title}}
+                    </span>
+                    <span class="block-upcoming-events__event-long-date">
+                      {{this.fullDate event}}
+                    </span>
                   </span>
-                </div>
-                <DButton
-                  class="btn-flat"
-                  @href={{event.post.url}}
-                  @translatedLabel={{i18n (themePrefix @buttonLabel)}}
-                />
-              </div>
+                </a>
+              </li>
             {{/each}}
-          </div>
+          </ol>
+        </:content>
+        <:footer>
           {{#if @linkUrl}}
-            <DButton
-              class="btn-default block-upcoming-events__link"
-              @href={{@linkUrl}}
-              @translatedLabel={{i18n (themePrefix @linkLabel)}}
-            />
+            <a class="block-panel__link" href={{getURL @linkUrl}}>
+              {{i18n (themePrefix @linkLabel)}}
+            </a>
           {{/if}}
-        </div>
-      </:content>
-    </DAsyncContent>
+        </:footer>
+      </BlockPanel>
+    {{/unless}}
   </template>
 }

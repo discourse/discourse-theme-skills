@@ -1,20 +1,7 @@
 .block-featured-list {
-  &__layout {
-    @include panel;
-    display: flex;
-    flex-direction: column;
-  }
-
-  &__header {
-    @include panel-header;
-  }
-
-  &__title {
-    @include section-title;
-  }
-
-  &__link {
-    @include section-link;
+  // the topic list runs edge to edge; its rows bring their own padding
+  .block-panel__body {
+    padding: 0;
   }
 
   &__list {
@@ -30,5 +17,10 @@
     .topic-list-item:last-child {
       border-bottom: 0;
     }
+  }
+
+  &__empty {
+    margin: 0;
+    padding: var(--t-Skills-card-space-padding);
   }
 }

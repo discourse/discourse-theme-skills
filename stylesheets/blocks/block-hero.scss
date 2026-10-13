@@ -1,10 +1,11 @@
 .block-hero {
   &__layout {
-    background-color: var(--skills-surface);
+    background-color: var(--t-Skills-color-background-sunken);
     color: var(--primary);
     padding: var(--space-8) var(--space-6);
     display: flex;
     justify-content: center;
+    border: 1px solid var(--t-Skills-color-border-default);
     border-radius: var(--d-border-radius-large);
   }
 
@@ -15,7 +16,7 @@
     flex-direction: column;
     gap: var(--space-4);
 
-    @include viewport.until(md) {
+    @include container.until(md, main-outlet-blocks) {
       text-align: center;
       align-items: center;
     }
@@ -24,7 +25,6 @@
   &__title {
     margin: 0;
     max-width: 700px;
-    color: var(--primary);
   }
 
   &__subtitle {
@@ -42,7 +42,7 @@
     padding: 0.75em 2em;
     align-self: flex-start;
 
-    @include viewport.until(md) {
+    @include container.until(md, main-outlet-blocks) {
       align-self: center;
     }
   }

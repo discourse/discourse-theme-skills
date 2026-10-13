@@ -6,10 +6,10 @@ Claude Code skills for Discourse theme and block component development, bundled 
 
 Two skills are included in `.claude/skills/`:
 
-| Skill                       | Description                                                                                                                               |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `discourse-theme-authoring` | Scaffolding, SCSS architecture, BEM CSS, viewport design, localization, settings, icons, CSS variables, transformers, and theme modifiers |
-| `discourse-block-authoring` | The `@block` decorator, plugin API registration, outlets, conditions, container blocks, async data, and testing                           |
+| Skill                       | Description                                                                                                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `discourse-theme-authoring` | Scaffolding, SCSS architecture, BEM CSS, container and viewport queries, localization, settings, icons, CSS variables and theme tokens, transformers, and theme modifiers |
+| `discourse-block-authoring` | The `@block` decorator, plugin API registration, layout files and settings, outlets, conditions, container blocks, async data in panels, and testing                      |
 
 ### Reference Files
 
@@ -33,12 +33,10 @@ The repo itself is a full Discourse theme that demonstrates blocks in practice. 
 | ----------------------- | --------- | ------------------------------------- |
 | `featured_topics_tag`   | _(empty)_ | Tag used to filter featured topics    |
 | `featured_topics_count` | 3         | Number of featured topics             |
-| `featured_list_count`   | 14        | Number of topics in the featured list |
+| `featured_list_count`   | 10        | Number of topics in the featured list |
 | `featured_list_filter`  | `latest`  | Filter for the featured list          |
-| `leaderboard_count`     | 12        | Number of users on the leaderboard    |
+| `leaderboard_count`     | 8         | Number of users on the leaderboard    |
 | `events_count`          | 5         | Upcoming events to show               |
-| `sidebar_category_id`   | 4         | Category ID for sidebar topic list    |
-| `sidebar_tags_count`    | 10        | Tags shown in sidebar                 |
 | `banner_categories`     | _(empty)_ | Categories that display a banner      |
 | `cta_link`              | `/signup` | URL for the CTA button                |
 

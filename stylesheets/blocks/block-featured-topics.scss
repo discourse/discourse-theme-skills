@@ -19,12 +19,10 @@
 
   &__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: var(--space-4);
 
-    @include viewport.until(sm) {
-      grid-template-columns: 1fr;
-    }
+    // one column once the container is narrower than a card
+    grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+    gap: var(--space-4);
   }
 
   &__card {
@@ -34,14 +32,6 @@
     justify-content: space-between;
     color: var(--primary);
     text-decoration: none;
-    transition:
-      box-shadow 0.15s ease,
-      transform 0.15s ease;
-
-    &:hover {
-      box-shadow: 0 4px 12px rgb(0, 0, 0, 0.1);
-      transform: translateY(-2px);
-    }
   }
 
   &__card-body {

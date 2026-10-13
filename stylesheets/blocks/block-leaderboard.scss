@@ -1,18 +1,5 @@
 .block-leaderboard {
-  &__layout {
-    @include panel;
-    display: flex;
-    flex-direction: column;
-  }
-
-  &__title {
-    @include panel-header;
-    @include section-title;
-    font-size: var(--font-up-1);
-  }
-
   &__list {
-    @include panel-body;
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
@@ -27,15 +14,15 @@
     transition: background-color 0.1s ease;
 
     &:hover {
-      background-color: var(--skills-surface);
+      background-color: var(--t-Skills-color-background-sunken);
     }
 
     &.--highlight {
-      background-color: var(--skills-accent-light);
+      background-color: var(--t-Skills-color-background-accent-subtle);
     }
 
     &.--self {
-      background-color: var(--skills-accent-light);
+      background-color: var(--t-Skills-color-background-accent-subtle);
       font-weight: 700;
     }
   }
@@ -60,12 +47,7 @@
 
   &__score {
     font-weight: 700;
-    color: var(--skills-accent);
+    color: var(--t-Skills-color-text-accent);
     font-variant-numeric: tabular-nums;
-  }
-
-  &__button {
-    margin: var(--space-2) var(--space-4) var(--space-4);
-    align-self: flex-start;
   }
 }

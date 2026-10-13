@@ -1,59 +1,104 @@
 import Component from "@glimmer/component";
+import { tracked } from "@glimmer/tracking";
 import { service } from "@ember/service";
+import { themePrefix } from "virtual:theme";
 import { block } from "discourse/blocks";
 import { ajax } from "discourse/lib/ajax";
 import { bind } from "discourse/lib/decorators";
+import getURL from "discourse/lib/get-url";
 import { or } from "discourse/truth-helpers";
-import DAsyncContent from "discourse/ui-kit/d-async-content";
-import DButton from "discourse/ui-kit/d-button";
 import dAvatar from "discourse/ui-kit/helpers/d-avatar";
 import dNumber from "discourse/ui-kit/helpers/d-number";
 import { i18n } from "discourse-i18n";
+import BlockPanel from "../components/block-panel";
 
+// Top users of the gamification plugin's default leaderboard. Without a
+// title the panel shows the leaderboard's own name. The panel disappears
+// when the plugin answers 403/404.
 @block("theme:skills:leaderboard", {
   description: "Gamification leaderboard showing top users",
   args: {
     title: { type: "string" },
+    icon: { type: "string" },
     count: { type: "number", default: 8 },
-    buttonLabel: { type: "string", required: true },
+    linkLabel: { type: "string", required: true },
   },
 })
 export default class BlockLeaderboard extends Component {
   @service siteSettings;
 
+  @tracked unavailable = false;
+  @tracked leaderboard;
+  @tracked retryCount = 0;
+
+  get title() {
+    return this.args.title
+      ? i18n(themePrefix(this.args.title))
+      : this.leaderboard?.name;
+  }
+
+  get leaderboardUrl() {
+    return getURL(
+      this.leaderboard ? `/leaderboard/${this.leaderboard.id}` : "/leaderboard"
+    );
+  }
+
+  get skeleton() {
+    return { rows: "user", count: this.args.count };
+  }
+
+  get context() {
+    return { count: this.args.count, retryCount: this.retryCount };
+  }
+
   @bind
-  async fetchLeaderboard() {
-    const count = this.args.count || 8;
-    const data = await ajax("/leaderboard", { data: { user_limit: count } });
+  retry() {
+    this.retryCount++;
+  }
 
-    const users = (data.users || []).map((user, index) => ({
-      ...user,
-      isCurrentUser: user.id === data.personal?.user?.id,
-      isTopRanked: index === 0,
-    }));
+  @bind
+  async fetchLeaderboard({ count }) {
+    try {
+      const data = await ajax("/leaderboard", { data: { user_limit: count } });
+      if (!this.isDestroying && !this.isDestroyed) {
+        this.leaderboard = data.leaderboard;
+      }
+      if (!data.users?.length) {
+        return null;
+      }
 
-    return {
-      leaderboard: data.leaderboard,
-      users,
-      personal: data.personal,
-      currentUserNotInTop: data.personal?.position > count,
-    };
+      const personal = data.personal;
+      return {
+        users: data.users.map((user) => ({
+          ...user,
+          isCurrentUser: user.id === personal?.user?.id,
+        })),
+        personal,
+        currentUserNotInTop: personal?.position > count,
+      };
+    } catch (error) {
+      if (error.jqXHR?.status === 403 || error.jqXHR?.status === 404) {
+        if (!this.isDestroying && !this.isDestroyed) {
+          this.unavailable = true;
+        }
+        return null;
+      }
+      throw error;
+    }
   }
 
   <template>
-    <DAsyncContent @asyncData={{this.fetchLeaderboard}}>
-      <:loading>
-        <div class="block-leaderboard__loading"><div class="spinner" /></div>
-      </:loading>
-
-      <:content as |data|>
-        <div class="block-leaderboard__layout">
-          {{#if @title}}
-            <h2 class="block-leaderboard__title">
-              {{i18n (themePrefix @title)}}
-            </h2>
-          {{/if}}
-
+    {{#unless this.unavailable}}
+      <BlockPanel
+        @title={{this.title}}
+        @icon={{@icon}}
+        @asyncData={{this.fetchLeaderboard}}
+        @context={{this.context}}
+        @skeleton={{this.skeleton}}
+        @onRetry={{this.retry}}
+        class="block-leaderboard"
+      >
+        <:content as |data|>
           <div class="block-leaderboard__list">
             {{#if data.currentUserNotInTop}}
               <div class="block-leaderboard__row --self">
@@ -69,7 +114,7 @@ export default class BlockLeaderboard extends Component {
               </div>
             {{/if}}
 
-            {{#each data.users as |rank|}}
+            {{#each data.users key="id" as |rank|}}
               <div
                 class="block-leaderboard__row
                   {{if rank.isCurrentUser '--highlight'}}"
@@ -93,14 +138,13 @@ export default class BlockLeaderboard extends Component {
               </div>
             {{/each}}
           </div>
-
-          <DButton
-            class="btn-default block-leaderboard__button"
-            @href="/leaderboard/{{data.leaderboard.id}}"
-            @translatedLabel={{i18n (themePrefix @buttonLabel)}}
-          />
-        </div>
-      </:content>
-    </DAsyncContent>
+        </:content>
+        <:footer>
+          <a class="block-panel__link" href={{this.leaderboardUrl}}>
+            {{i18n (themePrefix @linkLabel)}}
+          </a>
+        </:footer>
+      </BlockPanel>
+    {{/unless}}
   </template>
 }

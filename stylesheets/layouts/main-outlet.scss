@@ -1,0 +1,6 @@
+// The main outlet blocks (hero, category banner) size to the outlet, not the
+// viewport, so an open sidebar counts.
+.main-outlet-blocks {
+  container-type: inline-size;
+  container-name: main-outlet-blocks;
+}

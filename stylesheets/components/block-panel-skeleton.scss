@@ -1,0 +1,23 @@
+.block-panel-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+
+    // the name line grows, the trailing score keeps its width
+    > .d-skeleton:nth-child(2) {
+      flex: 1;
+    }
+  }
+
+  &__lines {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+}
