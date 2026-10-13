@@ -61,7 +61,10 @@ RSpec.describe "Skills theme blocks" do
 
       within(".block-upcoming-events") do
         expect(page).to have_css(".block-panel__title", text: "Upcoming events")
-        expect(page).to have_css(".block-upcoming-events__event-title", text: "A meetup later this week")
+        expect(page).to have_css(
+          ".block-upcoming-events__event-title",
+          text: "A meetup later this week",
+        )
         expect(page).to have_css(
           ".block-upcoming-events__event-title",
           text: "An all-day workshop today",
